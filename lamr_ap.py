@@ -26,11 +26,20 @@ def meanAP_LogAverageMissRate():
     bbb.modify(ground_truth, [bbb.AspectRatioModifier(.41, modify_ignores=False)]);
 
     # split and copy to day and night ground truth
-    ground_truth_day = {key: values for key, values in ground_truth.items() if
-                        key.startswith('set06') or key.startswith('set07') or key.startswith('set08')}
-    ground_truth_night = {key: values for key, values in ground_truth.items() if
-                          key.startswith('set09') or key.startswith('set10') or key.startswith('set11')}
+#    ground_truth_day = {key: values for key, values in ground_truth.items() if
+#                        key.startswith('set06') or key.startswith('set07') or key.startswith('set08')}
+#    ground_truth_night = {key: values for key, values in ground_truth.items() if
+#                          key.startswith('set09') or key.startswith('set10') or key.startswith('set11')}
 
+    # split and copy by scenes' GT
+    ground_truth_campus = {key: values for key, values in ground_truth.items() if
+                        key.startswith('set06') or key.startswith('set09') }
+
+    ground_truth_road = {key: values for key, values in ground_truth.items() if
+                        key.startswith('set07') or key.startswith('set10')}
+
+    ground_truth_downtown = {key: values for key, values in ground_truth.items() if
+                        key.startswith('set08') or key.startswith('set11') }
 
     def parse_detections(format, input, identify_fun=identify, clslabelmap=['person']):
         dets = bbb.parse(format, input, identify_fun, class_label_map=clslabelmap)
@@ -58,13 +67,25 @@ def meanAP_LogAverageMissRate():
     # detections_all['MSDS_sanitized'] = parse_detections('det_coco','results/SOTA/MSDS_sanitized.json')
 
     # split and copy to day and night detections
-    detections_day = {}
-    detections_night = {}
+ #   detections_day = {}
+ #   detections_night = {}
+ #   for label, detections in detections_all.items():
+ #       detections_day[label] = {key: values for key, values in detections.items() if
+ #                                key.startswith('set06') or key.startswith('set07') or key.startswith('set08')}
+ #       detections_night[label] = {key: values for key, values in detections.items() if
+ #                                  key.startswith('set09') or key.startswith('set10') or key.startswith('set11')}
+
+    detections_campus = {}
+    detections_road = {}
+    detections_downtown = {}
     for label, detections in detections_all.items():
-        detections_day[label] = {key: values for key, values in detections.items() if
-                                 key.startswith('set06') or key.startswith('set07') or key.startswith('set08')}
-        detections_night[label] = {key: values for key, values in detections.items() if
-                                   key.startswith('set09') or key.startswith('set10') or key.startswith('set11')}
+        detections_campus[label] = {key: values for key, values in detections.items() if
+                                 key.startswith('set06') or key.startswith('set09')}
+        detections_road[label] = {key: values for key, values in detections.items() if
+                                   key.startswith('set07') or key.startswith('set10')}
+        detections_downtown[label] = {key: values for key, values in detections.items() if
+                                   key.startswith('set08') or key.startswith('set11')}
+
 
     detectors_to_plot = ['current']
     # detectors_to_plot = ['Our: BU(VLT,T)', 'condition 86e map','Our: TD(V,V)','Our: TD(T,T)','Our: TD(VT,T)','Our: BU(VAT,T)','MSDS']
@@ -125,73 +146,90 @@ def meanAP_LogAverageMissRate():
             curves += [(label, ys, xs, score, color, linestyle)]
             scores[label] = score
 
-        # if pr:
-        #     # sort from highest ap to lowest
-        #     sorted_curves = sorted(curves, key=lambda curve: curve[3], reverse=True)
-        # else:
-        #     # sort from lowest to highest
-        #     sorted_curves = sorted(curves, key=lambda curve: curve[3])
+        if pr:
+            # sort from highest ap to lowest
+            sorted_curves = sorted(curves, key=lambda curve: curve[3], reverse=True)
+        else:
+            # sort from lowest to highest
+            sorted_curves = sorted(curves, key=lambda curve: curve[3])
 
-        # fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
 
-        # for label, ys, xs, score, color, linestyle in sorted_curves:
-        #     # skip curves not mensioned in only_plot
-        #     if only_plot is not None and label not in only_plot:
-        #         continue
+        for label, ys, xs, score, color, linestyle in sorted_curves:
+            # skip curves not mensioned in only_plot
+            if only_plot is not None and label not in only_plot:
+                continue
 
-        #     if pr:
-        #         plt.plot(xs, ys, color=color, linestyle=linestyle, label=f"{score}%  {label}", linewidth=linewidth)
-        #     else:
-        #         plt.loglog(xs, ys, color=color, linestyle=linestyle, label=f"{score}%  {label}", linewidth=linewidth)
-        #
-        # plt.legend(loc=legendloc)
-        #
-        # plt.gcf().suptitle(title, weight='bold')
+            if pr:
+                plt.plot(xs, ys, color=color, linestyle=linestyle, label=f"{score}%  {label}", linewidth=linewidth)
+            else:
+                plt.loglog(xs, ys, color=color, linestyle=linestyle, label=f"{score}%  {label}", linewidth=linewidth)
+        
+        plt.legend(loc=legendloc)
+        
+        plt.gcf().suptitle(title, weight='bold')
 
-        # if pr:
-        #     plt.grid(which='major')
-        #     plt.gca().set_ylabel('Precision')
-        #     plt.gca().set_xlabel('Recall')
-        #     plt.gca().set_xlim([0, 1])
-        #     plt.gca().set_ylim([0, 1])
-        # else:
-        #     # modify the y axis a bit
-        #     from matplotlib.ticker import FormatStrFormatter, LogLocator
-        #     subs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.4, 8.0]  # ticks to show per decade
-        #     ax.yaxis.set_minor_locator(LogLocator(subs=subs))
-        #     ax.yaxis.set_minor_formatter(FormatStrFormatter("%.2f"))
-        #     ax.yaxis.grid(which='minor')
-        #     ax.xaxis.grid(which='major')
-        #     plt.setp(ax.get_ymajorticklabels(), visible=False)  # disable major labels
-        #
-        #     plt.gca().set_ylabel('Miss rate')
-        #     plt.gca().set_xlabel('FPPI')
-        #     plt.gca().set_ylim([0.1, 1])
-        #
-            # plt.gca().set_xlim([0, 10])
+        if pr:
+            plt.grid(which='major')
+            plt.gca().set_ylabel('Precision')
+            plt.gca().set_xlabel('Recall')
+            plt.gca().set_xlim([0, 1])
+            plt.gca().set_ylim([0, 1])
+        else:
+            # modify the y axis a bit
+            from matplotlib.ticker import FormatStrFormatter, LogLocator
+            subs = [1.0, 2.0, 3.0, 4.0, 5.0, 6.4, 8.0]  # ticks to show per decade
+            ax.yaxis.set_minor_locator(LogLocator(subs=subs))
+            ax.yaxis.set_minor_formatter(FormatStrFormatter("%.2f"))
+            ax.yaxis.grid(which='minor')
+            ax.xaxis.grid(which='major')
+            plt.setp(ax.get_ymajorticklabels(), visible=False)  # disable major labels
+        
+            plt.gca().set_ylabel('Miss rate')
+            plt.gca().set_xlabel('FPPI')
+            plt.gca().set_ylim([0.1, 1])
+        
+            plt.gca().set_xlim([0, 10])
 
-        # if saveplot:
-        # plt.savefig(saveplot, format='eps', dpi=1200)
+        if saveplot:
+#             plt.savefig(saveplot, format='eps', dpi=1200)
+            plt.savefig(saveplot, format="svg",transparent=True)
 
         return scores
 
 
     scores_all_ap = generate_curves(ground_truth, detections_all, True, title="Day and night time",
-                                    saveplot="all_pr.eps", only_plot=detectors_to_plot)
+                                    saveplot="all_pr.svg", only_plot=detectors_to_plot)
     scores_all_lamr = generate_curves(ground_truth, detections_all, False, title="Day and night time",
-                                      saveplot="all_mr_fppi.eps", only_plot=detectors_to_plot)
+                                      saveplot="all_mr_fppi.svg", only_plot=detectors_to_plot)
+
+    scores_campus_ap = generate_curves(ground_truth_campus, detections_campus, True, title="Campus",
+                                    saveplot="campus_pr.svg", only_plot=detectors_to_plot, figsize=(8,6))
+    scores_campus_lamr = generate_curves(ground_truth_campus, detections_campus, False, title="Campus",
+                                      saveplot="campus_mr_fppi.svg", only_plot=detectors_to_plot, figsize=(8,6))
+
+    scores_road_ap = generate_curves(ground_truth_road, detections_road, True, title="Road",
+                                    saveplot="road_pr.svg", only_plot=detectors_to_plot, figsize=(8,6))
+    scores_road_lamr = generate_curves(ground_truth_road, detections_road, False, title="Road",
+                                      saveplot="road_mr_fppi.svg", only_plot=detectors_to_plot, figsize=(8,6))
+    scores_downtown_ap = generate_curves(ground_truth_downtown, detections_downtown, True, title="Downtown",
+                                    saveplot="downtown_pr.svg", only_plot=detectors_to_plot, figsize=(8,6))
+    scores_downtown_lamr = generate_curves(ground_truth_downtown, detections_downtown, False, title="Downtown",
+                                      saveplot="downtown_mr_fppi.svg", only_plot=detectors_to_plot, figsize=(8,6))
 
 
-    scores_day_ap = generate_curves(ground_truth_day, detections_day, True, title="Day time",
-                                    saveplot="day_pr.eps", only_plot=detectors_to_plot, figsize=(8,6))
-    scores_day_lamr = generate_curves(ground_truth_day, detections_day, False, title="Day time",
-                                      saveplot="day_mr_fppi.eps", only_plot=detectors_to_plot, figsize=(8,6))
 
 
-    scores_night_ap = generate_curves(ground_truth_night, detections_night, True, title="Night time",
-                                      saveplot="night_pr.eps", only_plot=detectors_to_plot, figsize=(8,6))
-    scores_night_lamr = generate_curves(ground_truth_night, detections_night, False, title="Night time",
-                                        saveplot="night_mr_fppi.eps", only_plot=detectors_to_plot, figsize=(8,6), legendloc='lower left')
+#    scores_day_ap = generate_curves(ground_truth_day, detections_day, True, title="Day time",
+#                                    saveplot="day_pr.eps", only_plot=detectors_to_plot, figsize=(8,6))
+#    scores_day_lamr = generate_curves(ground_truth_day, detections_day, False, title="Day time",
+#                                      saveplot="day_mr_fppi.eps", only_plot=detectors_to_plot, figsize=(8,6))
+
+
+#    scores_night_ap = generate_curves(ground_truth_night, detections_night, True, title="Night time",
+#                                      saveplot="night_pr.eps", only_plot=detectors_to_plot, figsize=(8,6))
+#    scores_night_lamr = generate_curves(ground_truth_night, detections_night, False, title="Night time",
+#                                        saveplot="night_mr_fppi.eps", only_plot=detectors_to_plot, figsize=(8,6), legendloc='lower left')
     # plt.show()
 
     # print(scores_all_ap['current'])
@@ -200,4 +238,6 @@ def meanAP_LogAverageMissRate():
     # print(scores_all_lamr['current'])
     # print(scores_day_lamr['current'])
     # print(scores_night_lamr['current'])
-    return  scores_all_ap['current'],scores_day_ap['current'],scores_night_ap['current'],scores_all_lamr['current'],scores_day_lamr['current'],scores_night_lamr['current']
+#    return  scores_all_ap['current'],scores_day_ap['current'],scores_night_ap['current'],scores_all_lamr['current'],scores_day_lamr['current'],scores_night_lamr['current']
+    return  scores_all_ap['current'],scores_campus_ap['current'],scores_road_ap['current'],scores_downtown_ap['current'],scores_all_lamr['current'],scores_campus_lamr['current'],scores_road_lamr['current'],scores_downtown_lamr['current']
+

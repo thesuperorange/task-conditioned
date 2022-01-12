@@ -35,10 +35,15 @@ def convert(faster_detection_results, output_txt):
 if __name__ == '__main__':
     
     output_txt = '/home/superorange5/Research/KAIST_research/task-conditioned/results/det_test_person.txt'
+    input_path = '/home/superorange5/Research/2019_deepMI3/deepMI3/faster-RCNN/output'
+    model_subfolder = 'fasterRD' #'KAIST_fasterRCNN_vgg16_FedAvg_AVG'
+    epoch = 30 
+    for i in range(epoch):
+#    parser = argparse.ArgumentParser()
+#    parser.add_argument('--input', '-i', type=str, help='input detection results')
+#    args, _ = parser.parse_known_args()
+        input_folder = os.path.join(input_path, model_subfolder,'KAIST_fasterRCNN_vgg16_'+str(i+1),'detection_results/')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', type=str, help='input detection results')
-    args, _ = parser.parse_known_args()
-    convert(args.input, output_txt)
-    EVAL.evaluation_models()
+        convert(input_folder, output_txt)
+        EVAL.evaluation_models()
 

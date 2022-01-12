@@ -124,9 +124,12 @@ def evaluation_models():
 #    cur_mAP = _do_python_eval(res_prefix, testlist, class_names, output_dir='output')
     convert_predict_to_JSON()
 #    print('mAP: %.4f \n' %(cur_mAP))
-    all_ap, day_ap, night_ap, all_mr, day_mr, night_mr = meanAP_LogAverageMissRate()
-    print('ap: %.4f ap_d: %.4f ap_n: %.4f lamr: %.4f mr_d: %.4f mr_n: %.4f \n' % (
-         all_ap / 100.0, day_ap / 100.0, night_ap / 100.0, all_mr / 100.0, day_mr / 100.0, night_mr / 100.0))
+#    all_ap, day_ap, night_ap, all_mr, day_mr, night_mr = meanAP_LogAverageMissRate()
+    all_ap, campus_ap, road_ap, downtown_ap, all_mr, campus_mr, road_mr, downtown_mr = meanAP_LogAverageMissRate()
+#    print('%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f' % (
+#         all_ap / 100.0, campus_ap / 100.0, road_ap / 100.0,downtown_ap / 100.0, all_mr / 100.0, campus_mr / 100.0, road_mr / 100.0, downtown_mr / 100.0))
+    print('%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f' % (
+         all_ap , campus_ap , road_ap,downtown_ap , all_mr, campus_mr, road_mr, downtown_mr))
 if __name__ == '__main__':
     import sys
     if len(sys.argv) >=1:
